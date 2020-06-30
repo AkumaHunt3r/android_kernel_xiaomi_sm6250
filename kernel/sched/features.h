@@ -119,10 +119,17 @@ SCHED_FEAT(ENERGY_AWARE, false)
  * FBT_STRICT_ORDER
  *   ON: If the target CPU saves any energy, use that.
  *   OFF: Use whichever of target or backup saves most.
+ * EAS_CRUCIAL
+ *   Direct tasks in a schedtune.crucial=1 group to the idle CPU
+ *   with the greatest original capacity. Unlike prefer_idle,
+ *   the crucial path iterates through all available CPUs. If a
+ *   crucial CPU is found, it takes precedence over a prefer_idle
+ *   selection.
  */
 SCHED_FEAT(EAS_PREFER_IDLE, true)
 SCHED_FEAT(FIND_BEST_TARGET, true)
 SCHED_FEAT(FBT_STRICT_ORDER, false)
+SCHED_FEAT(EAS_CRUCIAL, true)
 
 /*
  * Apply schedtune boost hold to tasks of all sched classes.
