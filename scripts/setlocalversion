@@ -51,6 +51,13 @@ scm_version()
 		# it, because this version is defined in the top level Makefile.
 		if [ -z "`git describe --exact-match 2>/dev/null`" ]; then
 
+			# Gets current branch and last commit
+			# Hash to have a prettier localversion
+			branch_name=$(git rev-parse --abbrev-ref HEAD)
+			last_commit=$(git rev-parse --verify --short=10 HEAD)
+			printf '%s' "/$branch_name/$last_commit"
+			return
+
 			# If only the short version is requested, don't bother
 			# running further git commands
 			if $short; then
