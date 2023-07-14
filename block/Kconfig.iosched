@@ -4,7 +4,7 @@ if BLOCK
 menu "IO Schedulers"
 
 config IOSCHED_NOOP
-	bool
+	bool "No-op I/O scheduler"
 	default y
 	---help---
 	  The no-op I/O scheduler is a minimal scheduler that does basic merging
@@ -40,6 +40,24 @@ config CFQ_GROUP_IOSCHED
 	---help---
 	  Enable group IO scheduling in CFQ.
 
+config IOSCHED_ANXIETY
+        tristate "Anxiety I/O scheduler"
+        default n
+        ---help---
+          The Anxiety I/O scheduler prioritizes latency over everything
+          else. When a request comes in, it will use a lighweight
+          selection algorithm to swiftly process the current pending task.
+
+config IOSCHED_MAPLE
+        tristate "Maple I/O scheduler"
+        default y
+
+config IOSCHED_ZEN                                                                  tristate "Zen I/O scheduler"
+        default y
+        ---help---
+          FCFS, dispatches are back-inserted, deadlines ensure fairness.
+          Should work best with devices where there is no travel delay.
+
 choice
 
 	prompt "Default I/O scheduler"
@@ -55,7 +73,16 @@ choice
 		bool "CFQ" if IOSCHED_CFQ=y
 
 	config DEFAULT_NOOP
-		bool "No-op"
+		bool "No-op" if IOSCHED_NOOP=y
+
+	config DEFAULT_ANXIETY
+		bool "Anxiety" if IOSCHED_ANXIETY=y
+
+	config DEFAULT_MAPLE
+		bool "Maple" if IOSCHED_MAPLE=y
+
+	config DEFAULT_ZEN
+		bool "ZEN" if IOSCHED_ZEN=y
 
 endchoice
 
@@ -64,6 +91,9 @@ config DEFAULT_IOSCHED
 	default "deadline" if DEFAULT_DEADLINE
 	default "cfq" if DEFAULT_CFQ
 	default "noop" if DEFAULT_NOOP
+	default "anxiety" if DEFAULT_ANXIETY
+	default "maple" if DEFAULT_MAPLE
+	default "zen" if DEFAULT_ZEN
 
 config MQ_IOSCHED_DEADLINE
 	tristate "MQ deadline I/O scheduler"
