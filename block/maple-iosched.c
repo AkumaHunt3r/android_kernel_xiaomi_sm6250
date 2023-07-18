@@ -35,7 +35,7 @@ static const int sleep_latency_multiple = 10;	/* multple for expire time when de
 /* Elevator data */
 struct maple_data {
 	/* Request queues */
-	struct list_head fifo_list[2][2];
+	struct list_head fifo_list[2][2] ____cacheline_aligned;;
 
 	/* Attributes */
 	unsigned int batched;
