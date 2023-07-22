@@ -716,7 +716,7 @@ endif
 
 # Tune the kernel for the CPU, more specifically, the litle cluster.
 KBUILD_CFLAGS	+= \
-	-march=armv8-a+crypto+crc \
+	-march=armv8.2-a+crypto+crc+fp \
 	-mtune=cortex-a55
 
 # GCC Graphite flags
