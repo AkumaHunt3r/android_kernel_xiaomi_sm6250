@@ -19,8 +19,8 @@
 #define DEFAULT_BATCH_COUNT	(4)
 
 struct anxiety_data {
-	struct list_head sync_queue ____cacheline_aligned;;
-	struct list_head async_queue ____cacheline_aligned;;
+	struct list_head sync_queue;
+	struct list_head async_queue;
 
 	/* Tunables */
 	uint8_t sync_ratio;
