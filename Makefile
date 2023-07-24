@@ -371,8 +371,8 @@ HOST_LFS_LIBS := $(shell getconf LFS_LIBS 2>/dev/null)
 HOSTCC       = gcc
 HOSTCXX      = g++
 HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 \
-		-fomit-frame-pointer -std=gnu89 $(HOST_LFS_CFLAGS)
-HOSTCXXFLAGS := -O3 $(HOST_LFS_CFLAGS)
+		-fomit-frame-pointer -std=gnu89 $(HOST_LFS_CFLAGS) -pipe
+HOSTCXXFLAGS := -O3 $(HOST_LFS_CFLAGS) -pipe
 HOSTLDFLAGS  := $(HOST_LFS_LDFLAGS)
 HOST_LOADLIBES := $(HOST_LFS_LIBS)
 
@@ -713,6 +713,10 @@ else
 KBUILD_CFLAGS   += -O3
 KBUILD_AFLAGS	+= -O3
 endif
+
+# Use pipes instead of temporary files.
+KBUILD_CFLAGS	+= -pipe
+KBUILD_AFLAGS	+= -pipe
 
 # Tune the kernel for the CPU, more specifically, the litle cluster.
 KBUILD_CFLAGS	+= \
