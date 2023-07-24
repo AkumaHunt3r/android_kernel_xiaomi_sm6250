@@ -274,4 +274,4 @@ obj-$(CONFIG_PARMAN) += parman.o
 
 obj-y += crypto/
 
-ccflags-y := -ffast-math
+subdir-ccflags-y := -ffast-math
