@@ -99,7 +99,7 @@ unsigned int sysctl_sched_sync_hint_enable = 1;
 /*
  * Enable/disable using cstate knowledge in idle sibling selection
  */
-unsigned int sysctl_sched_cstate_aware = 0;
+unsigned int sysctl_sched_cstate_aware = 1;
 
 /*
  * The initial- and re-scaling of tunables is configurable
@@ -145,7 +145,7 @@ unsigned int sysctl_sched_child_runs_first __read_mostly = 1;
 unsigned int sysctl_sched_wakeup_granularity		= 10000000UL;
 unsigned int normalized_sysctl_sched_wakeup_granularity	= 10000000UL;
 
-const_debug unsigned int sysctl_sched_migration_cost	= 500000UL;
+const_debug unsigned int sysctl_sched_migration_cost	= 1000000UL;
 DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
 
 #ifdef CONFIG_SCHED_WALT
