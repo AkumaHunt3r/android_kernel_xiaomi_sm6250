@@ -3152,6 +3152,24 @@ int wake_up_state(struct task_struct *p, unsigned int state)
 	return try_to_wake_up(p, state, 0, 1);
 }
 
+#ifdef CONFIG_SCHED_BORE
+static inline void adjust_prev_burst(struct task_struct *p)
+{
+	u32 cnt = 0;
+	u64 sum = 0, avg = 0;
+	struct task_struct *sib;
+	list_for_each_entry(sib, &p->sibling, sibling) {
+		cnt++;
+		sum += sib->se.max_burst_time >> 8;
+	}
+	if (cnt) avg = div_u64(sum, cnt)
+		<< 8;
+	if (p->se.prev_burst_time < avg)
+		p->se.prev_burst_time = avg;
+	p->se.max_burst_time = p->se.prev_burst_time;
+}
+#endif
+
 /*
  * Perform scheduler related setup for a newly forked process p.
  * p is forked by current.
@@ -3168,6 +3186,9 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 	p->se.prev_sum_exec_runtime	= 0;
 	p->se.nr_migrations		= 0;
 	p->se.vruntime			= 0;
+#ifdef CONFIG_SCHED_BORE
+	p->se.burst_time      = 0;
+#endif
 	p->last_sleep_ts		= 0;
 	p->boost                = 0;
 	p->boost_expires        = 0;
@@ -3345,6 +3366,9 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
 	init_new_task_load(p);
 	cpu = get_cpu();
 	__sched_fork(clone_flags, p);
+#ifdef CONFIG_SCHED_BORE
+	adjust_prev_burst(p);
+#endif
 	/*
 	 * We mark the process as NEW here. This guarantees that
 	 * nobody will actually run it, and a signal or other external
@@ -6416,6 +6440,10 @@ void init_idle(struct task_struct *idle, int cpu)
 
 	idle->state = TASK_RUNNING;
 	idle->se.exec_start = sched_clock();
+#ifdef CONFIG_SCHED_BORE
+	idle->se.prev_burst_time = 0;
+	idle->se.max_burst_time = 0;
+#endif
 	idle->flags |= PF_IDLE;
 
 	scs_task_reset(idle);
@@ -7275,6 +7303,9 @@ void __init sched_init(void)
 	unsigned long alloc_size = 0, ptr;
 
 	sched_clock_init();
+#ifdef CONFIG_SCHED_BORE
+	printk(KERN_INFO "BORE (Burst-Oriented Response Enhancer) CPU Scheduler modification 1.7.14 by Masahito Suzuki");
+#endif
 	wait_bit_init();
 
 	init_clusters();
