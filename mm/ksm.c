@@ -39,6 +39,7 @@
 #include <linux/freezer.h>
 #include <linux/oom.h>
 #include <linux/numa.h>
+#include <linux/state_notifier.h>
 
 #include <asm/tlbflush.h>
 #include "internal.h"
@@ -251,10 +252,10 @@ static int ksm_stable_node_chains_prune_millisecs = 2000;
 static int ksm_max_page_sharing = 256;
 
 /* Number of pages ksmd should scan in one batch */
-static unsigned int ksm_thread_pages_to_scan = 128;
+static unsigned int ksm_thread_pages_to_scan = 256;
 
 /* Milliseconds ksmd should sleep between batches */
-static unsigned int ksm_thread_sleep_millisecs = 60 * HZ;
+static unsigned int ksm_thread_sleep_millisecs = 3000;
 
 /* Checksum of an empty (zeroed) page */
 static unsigned int zero_checksum __read_mostly;
@@ -2350,7 +2351,7 @@ next_mm:
 static void ksm_do_scan(unsigned int scan_npages)
 {
 	struct rmap_item *rmap_item;
-	struct page *page;
+	struct page *uninitialized_var(page);
 
 	while (scan_npages-- && likely(!freezing(current))) {
 		cond_resched();
@@ -2370,13 +2371,30 @@ static int ksmd_should_run(void)
 static int ksm_scan_thread(void *nothing)
 {
 	set_freezable();
+#ifdef CONFIG_STATE_NOTIFIER
+	if (unlikely(state_suspended))
+		set_user_nice(current, -5);
+	else
+		set_user_nice(current, 5);
+#else
 	set_user_nice(current, 5);
+#endif
 
 	while (!kthread_should_stop()) {
 		mutex_lock(&ksm_thread_mutex);
 		wait_while_offlining();
 		if (ksmd_should_run())
-			ksm_do_scan(ksm_thread_pages_to_scan);
+#ifdef CONFIG_STATE_NOTIFIER
+		{
+			if (unlikely(state_suspended)) {
+				ksm_do_scan(ksm_thread_pages_to_scan * 2);
+			} else {
+				ksm_do_scan(ksm_thread_pages_to_scan);
+			}
+		}
+#else
+		ksm_do_scan(ksm_thread_pages_to_scan);
+#endif
 		mutex_unlock(&ksm_thread_mutex);
 
 		try_to_freeze();

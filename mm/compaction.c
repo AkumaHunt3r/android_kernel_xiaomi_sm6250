@@ -23,6 +23,8 @@
 #include <linux/freezer.h>
 #include <linux/page_owner.h>
 #include <linux/psi.h>
+#include <linux/state_notifier.h>
+
 #include "internal.h"
 
 #ifdef CONFIG_COMPACTION
@@ -2151,6 +2153,31 @@ static int __init kcompactd_init(void)
 		kcompactd_run(nid);
 	return 0;
 }
+
+#ifdef CONFIG_STATE_NOTIFIER
+static int state_notifier_callback(struct notifier_block *cb,
+				unsigned long event, void *data)
+{
+	if (unlikely(state_suspended))
+		compact_nodes();
+
+	return NOTIFY_OK;
+}
+
+static struct notifier_block compaction_notifier = {
+	.notifier_call = state_notifier_callback,
+	.priority = - 1,
+};
+#endif
+
 subsys_initcall(kcompactd_init)
+#ifdef CONFIG_STATE_NOTIFIER
+static int __init register_notifier(void)
+{
+	state_register_client(&compaction_notifier);
+	return 0;
+}
+late_initcall(register_notifier);
+#endif
 
 #endif /* CONFIG_COMPACTION */
