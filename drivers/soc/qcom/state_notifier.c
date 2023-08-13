@@ -23,7 +23,7 @@
 /*
  * debug = 1 will print all
  */
-static unsigned int debug;
+static unsigned int debug = 1;
 module_param_named(debug_mask, debug, uint, 0644);
 
 #define dprintk(msg...)		\
