@@ -719,15 +719,20 @@ KBUILD_CFLAGS	+= -pipe
 KBUILD_AFLAGS	+= -pipe
 
 # Tune the kernel for the CPU, more specifically, the litle cluster.
-KBUILD_CFLAGS	+= \
-	-march=armv8.2-a+crypto+crc+fp \
+CPU_FLAGS	:= \
+	-march=armv8.2-a+crypto+crc \
 	-mtune=cortex-a55
+KBUILD_CFLAGS += $(CPU_FLAGS)
+KBUILD_AFLAGS += $(CPU_FLAGS)
 
 # GCC Graphite flags
 ifeq ($(cc-name),gcc)
-KBUILD_CFLAGS += -fgraphite-identity -floop-nest-optimize \
+GRAPHITE_FLAGS := -fgraphite-identity -floop-nest-optimize \
 	-floop-parallelize-all -ftree-loop-if-convert \
 	 -ftree-loop-distribution -floop-interchange
+
+KBUILD_CFLAGS += $(GRAPHITE_FLAGS)
+KBUILD_AFLAGS += $(GRAPHITR_FLAGS)
 endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
