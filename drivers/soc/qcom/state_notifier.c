@@ -13,15 +13,14 @@
 #include <linux/state_notifier.h>
 #include <linux/notifier.h>
 #include <linux/export.h>
-#include <linux/fb.h>
+#include <linux/msm_drm_notify.h>
 #include <linux/module.h>
 
 #define DEFAULT_SUSPEND_DEFER_TIME 	1
-#define DEFAULT_USE_FB_NOTIFIER 	1
-#define STATE_NOTIFIER			"state_notifier"
+#define STATE_NOTIFIER				"state_notifier"
 
 static struct notifier_block notif;
-static int prev_fb = FB_BLANK_UNBLANK;
+static int prev_drm = MSM_DRM_BLANK_UNBLANK;
 static unsigned int suspend_defer_time = DEFAULT_SUSPEND_DEFER_TIME;
 module_param_named(suspend_defer_time, suspend_defer_time, uint, 0664);
 static struct delayed_work suspend_work;
@@ -30,8 +29,6 @@ struct work_struct resume_work;
 bool state_suspended;
 module_param_named(state_suspended, state_suspended, bool, 0444);
 static bool suspend_in_progress;
-bool use_fb_notifier = DEFAULT_USE_FB_NOTIFIER;
-module_param_named(use_fb_notifier, use_fb_notifier, bool, 0664);
 
 static BLOCKING_NOTIFIER_HEAD(state_notifier_list);
 
@@ -104,29 +101,28 @@ void state_resume(void)
 		queue_work(susp_wq, &resume_work);
 }
 
-static int fb_notifier_callback(struct notifier_block *self,
+static int drm_notifier_callback(struct notifier_block *self,
 				unsigned long event, void *data)
 {
-	struct fb_event *evdata = data;
+	struct msm_drm_notifier *evdata = data;
 	int *blank;
 
-	if (!use_fb_notifier)
-		return NOTIFY_OK;
-
-	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+	if (evdata && evdata->data && event == MSM_DRM_EVENT_BLANK) {
 		blank = evdata->data;
 		switch (*blank) {
-			case FB_BLANK_UNBLANK:
-				if (prev_fb == FB_BLANK_POWERDOWN) {
+			case MSM_DRM_BLANK_UNBLANK:
+				if (prev_drm == MSM_DRM_BLANK_POWERDOWN) {
 					state_resume();
-					prev_fb = FB_BLANK_UNBLANK;
+					prev_drm = MSM_DRM_BLANK_UNBLANK;
 				}
 				break;
-			case FB_BLANK_POWERDOWN:
-				if (prev_fb == FB_BLANK_UNBLANK) {
+			case MSM_DRM_BLANK_POWERDOWN:
+				if (prev_drm == MSM_DRM_BLANK_UNBLANK) {
 					state_suspend();
-					prev_fb = FB_BLANK_POWERDOWN;
+					prev_drm = MSM_DRM_BLANK_POWERDOWN;
 				}
+				break;
+			default:
 				break;
 		}
 	}
@@ -138,21 +134,20 @@ static int __init state_notifier_init(void)
 {
 	int ret;
 
-	notif.notifier_call = fb_notifier_callback;
-	ret = fb_register_client(&notif);
+	notif.notifier_call = drm_notifier_callback;
+	ret = msm_drm_register_client(&notif);
 	if (ret)
-		pr_err("Failed to register FB notifier callback for state notifier.\n");
+		pr_err("%s: failed to register DRM notifier callback.\n", STATE_NOTIFIER);
 
 	susp_wq = create_singlethread_workqueue("state_susp_wq");
 	if (!susp_wq)
-		pr_err("State Notifier failed to allocate suspend workqueue\n");
+		pr_err("%s: failed to allocate suspend workqueue.\n", STATE_NOTIFIER);
 
 	INIT_DELAYED_WORK(&suspend_work, _suspend_work);
 	INIT_WORK(&resume_work, _resume_work);
 
 	return ret;
 }
-
 subsys_initcall(state_notifier_init);
 
 MODULE_AUTHOR("Pranav Vashi <neobuddy89@gmail.com>");
