@@ -2158,8 +2158,13 @@ static int __init kcompactd_init(void)
 static int state_notifier_callback(struct notifier_block *cb,
 				unsigned long event, void *data)
 {
-	if (unlikely(state_suspended))
-		compact_nodes();
+	switch (event) {
+		case STATE_NOTIFIER_SUSPEND:
+			compact_nodes();
+			break;
+		default:
+			break;
+	}
 
 	return NOTIFY_OK;
 }
