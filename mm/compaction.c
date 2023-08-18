@@ -2166,7 +2166,7 @@ static int state_notifier_callback(struct notifier_block *cb,
 
 static struct notifier_block compaction_notifier = {
 	.notifier_call = state_notifier_callback,
-	.priority = - 1,
+	.priority = -1,
 };
 #endif
 
