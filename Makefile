@@ -725,7 +725,7 @@ CPU_FLAGS	:= \
 KBUILD_CFLAGS += $(CPU_FLAGS)
 KBUILD_AFLAGS += $(CPU_FLAGS)
 
-# GCC Graphite flags
+# GCC specific flags
 ifeq ($(cc-name),gcc)
 GRAPHITE_FLAGS := -fgraphite-identity -floop-nest-optimize \
 	-floop-parallelize-all -ftree-loop-if-convert \
@@ -733,6 +733,22 @@ GRAPHITE_FLAGS := -fgraphite-identity -floop-nest-optimize \
 
 KBUILD_CFLAGS += $(GRAPHITE_FLAGS)
 KBUILD_AFLAGS += $(GRAPHITR_FLAGS)
+endif
+
+# LLVM specific flags
+ifeq ($(cc-name),clang)
+INLINE_FLAGS := -mllvm -inlinehint-threshold=1000 \
+	-mllvm -import-instr-limit=1000
+POLLY_FLAGS :=  -mllvm -polly \
+	-mllvm -polly-run-dce \
+	-mllvm -polly-run-inliner \
+	-mllvm -polly-ast-use-context \
+	-mllvm -polly-detect-keep-going \
+	-mllvm -polly-vectorizer=stripmine \
+	-mllvm -polly-invariant-load-hoisting
+
+KBUILD_CLAFGS += $(INLINE_FLAGS) $(POLLY_FLAGS)
+KBUILD_AFLAGS += $(INLINE_FLAGS) $(POLLY_FLAGS)
 endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
@@ -907,9 +923,6 @@ else
 lto-clang-flags	:= -flto
 endif
 lto-clang-flags += -fvisibility=default $(call cc-option, -fsplit-lto-unit)
-
-# Limit inlining across translation units to reduce binary size
-LD_FLAGS_LTO_CLANG := -mllvm -import-instr-limit=5
 
 KBUILD_LDFLAGS += $(LD_FLAGS_LTO_CLANG)
 KBUILD_LDFLAGS_MODULE += $(LD_FLAGS_LTO_CLANG)
