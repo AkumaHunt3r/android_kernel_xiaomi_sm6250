@@ -217,7 +217,7 @@ void nvt_ts_usb_event_callback(void)
 	schedule_work(&nvt_usb_plugin_work);
 }
 
-static void nvt_ts_usb_plugin_work_func(struct work_struct *work)
+static __always_inline void nvt_ts_usb_plugin_work_func(struct work_struct *work)
 {
 	uint8_t buf[8] = {0};
 	int32_t ret = 0;
@@ -265,7 +265,7 @@ Description:
 return:
 	n.a.
 *******************************************************/
-static void nvt_irq_enable(bool enable)
+static __always_inline void nvt_irq_enable(bool enable)
 {
 	struct irq_desc *desc;
 
@@ -292,7 +292,7 @@ Description:
 return:
 	Executive outcomes. 0---succeed.
 *******************************************************/
-static inline int32_t spi_read_write(struct spi_device *client, uint8_t *buf, size_t len , NVT_SPI_RW rw)
+static __always_inline int32_t spi_read_write(struct spi_device *client, uint8_t *buf, size_t len , NVT_SPI_RW rw)
 {
 	struct spi_message m;
 	struct spi_transfer t = {
@@ -325,7 +325,7 @@ Description:
 return:
 	Executive outcomes. 2---succeed. -5---I/O error
 *******************************************************/
-int32_t CTP_SPI_READ(struct spi_device *client, uint8_t *buf, uint16_t len)
+int32_t __always_inline CTP_SPI_READ(struct spi_device *client, uint8_t *buf, uint16_t len)
 {
 	int32_t ret = -1;
 	int32_t retries = 0;
@@ -359,7 +359,7 @@ Description:
 return:
 	Executive outcomes. 1---succeed. -5---I/O error
 *******************************************************/
-int32_t CTP_SPI_WRITE(struct spi_device *client, uint8_t *buf, uint16_t len)
+int32_t __always_inline CTP_SPI_WRITE(struct spi_device *client, uint8_t *buf, uint16_t len)
 {
 	int32_t ret = -1;
 	int32_t retries = 0;
@@ -391,7 +391,7 @@ Description:
 return:
 	Executive outcomes. 0---succeed. -5---access fail.
 *******************************************************/
-int32_t nvt_set_page(uint32_t addr)
+int32_t __always_inline nvt_set_page(uint32_t addr)
 {
 	uint8_t buf[4] = {0};
 
@@ -409,7 +409,7 @@ Description:
 return:
 	Executive outcomes. 0---succeed. -5---access fail.
 *******************************************************/
-int32_t nvt_write_addr(uint32_t addr, uint8_t data)
+int32_t __always_inline nvt_write_addr(uint32_t addr, uint8_t data)
 {
 	int32_t ret = 0;
 	uint8_t buf[4] = {0};
@@ -1338,7 +1338,7 @@ Description:
 return:
 	n.a.
 *******************************************************/
-static irqreturn_t nvt_ts_work_func(int irq, void *data)
+static __always_inline irqreturn_t nvt_ts_work_func(int irq, void *data)
 {
 	int32_t ret = -1;
 	uint8_t point_data[POINT_DATA_LEN + 1 + DUMMY_BYTES] = {0};
@@ -2287,7 +2287,7 @@ Description:
 return:
 	Executive outcomes. 0---succeed.
 *******************************************************/
-static int32_t nvt_ts_suspend(struct device *dev)
+static __always_inline int32_t nvt_ts_suspend(struct device *dev)
 {
 	uint8_t buf[4] = {0};
 #if MT_PROTOCOL_B
@@ -2376,7 +2376,7 @@ Description:
 return:
 	Executive outcomes. 0---succeed.
 *******************************************************/
-static int32_t nvt_ts_resume(struct device *dev)
+static __always_inline int32_t nvt_ts_resume(struct device *dev)
 {
 	if (bTouchIsAwake) {
 		NVT_LOG("Touch is already resume\n");
@@ -2468,7 +2468,7 @@ static void nvt_ts_resume_work(struct work_struct *work)
 	nvt_ts_resume(&ts->client->dev);
 }
 #ifdef _MSM_DRM_NOTIFY_H_
-static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
+static __always_inline int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
 {
 	struct msm_drm_notifier *evdata = data;
 	int *blank;
@@ -2480,18 +2480,23 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 
 	if (evdata->data && ts) {
 		blank = evdata->data;
-		if (event == MSM_DRM_EARLY_EVENT_BLANK) {
+		switch (event) {
+		case MSM_DRM_EARLY_EVENT_BLANK:
 			if (*blank == MSM_DRM_BLANK_POWERDOWN) {
 				NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
 				cancel_work_sync(&ts->resume_work);
 				nvt_ts_suspend(&ts->client->dev);
 			}
-		} else if (event == MSM_DRM_EVENT_BLANK) {
+			break;
+		case MSM_DRM_EVENT_BLANK:
 			if (*blank == MSM_DRM_BLANK_UNBLANK) {
 				NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
 				//nvt_ts_resume(&ts->client->dev);
 				queue_work(ts->workqueue, &ts->resume_work);
 			}
+			break;
+		default:
+			break;
 		}
 	}
 
