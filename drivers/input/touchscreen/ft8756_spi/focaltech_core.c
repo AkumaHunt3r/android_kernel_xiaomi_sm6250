@@ -201,7 +201,7 @@ int fts_reset_proc(int hdelayms)
 	return 0;
 }
 
-void fts_irq_disable(void)
+void __always_inline fts_irq_disable(void)
 {
 	unsigned long irqflags;
 
@@ -217,7 +217,7 @@ void fts_irq_disable(void)
 	FTS_FUNC_EXIT();
 }
 
-void fts_irq_enable(void)
+void __always_inline fts_irq_enable(void)
 {
 	unsigned long irqflags = 0;
 
@@ -394,7 +394,7 @@ static void fts_show_touch_buffer(u8 *data, int datalen)
 	tmpbuf = NULL;
 }
 
-void fts_release_all_finger(void)
+void __always_inline fts_release_all_finger(void)
 {
 	struct input_dev *input_dev = fts_data->input_dev;
 #if FTS_MT_PROTOCOL_B_EN
@@ -432,7 +432,7 @@ void fts_release_all_finger(void)
 * Output:
 * Return: return 0 if it's key event, otherwise return error code
 *****************************************************************************/
-static int fts_input_report_key(struct fts_ts_data *data, int index)
+static __always_inline int fts_input_report_key(struct fts_ts_data *data, int index)
 {
 	int i = 0;
 	int x = data->events[index].x;
@@ -607,7 +607,7 @@ static int fts_input_report_a(struct fts_ts_data *data)
 }
 #endif
 
-static int fts_read_touchdata(struct fts_ts_data *data)
+static __always_inline int fts_read_touchdata(struct fts_ts_data *data)
 {
 	int ret = 0;
 	u8 *buf = data->point_buf;
@@ -641,7 +641,7 @@ static int fts_read_touchdata(struct fts_ts_data *data)
 	return 0;
 }
 
-static int fts_read_parse_touchdata(struct fts_ts_data *data)
+static __always_inline int fts_read_parse_touchdata(struct fts_ts_data *data)
 {
 	int ret = 0;
 	int i = 0;
@@ -735,7 +735,7 @@ static void fts_irq_read_report(void)
 #endif
 }
 
-static irqreturn_t fts_irq_handler(int irq, void *data)
+static __always_inline irqreturn_t fts_irq_handler(int irq, void *data)
 {
 
 	int ret = 0;
@@ -751,7 +751,7 @@ static irqreturn_t fts_irq_handler(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
-static int fts_irq_registration(struct fts_ts_data *ts_data)
+static __always_inline int fts_irq_registration(struct fts_ts_data *ts_data)
 {
 	int ret = 0;
 	struct fts_ts_platform_data *pdata = ts_data->pdata;
@@ -898,7 +898,7 @@ err_pinctrl_get:
 	return ret;
 }
 
-static int fts_pinctrl_select_normal(struct fts_ts_data *ts)
+static __always_inline int fts_pinctrl_select_normal(struct fts_ts_data *ts)
 {
 	int ret = 0;
 
@@ -912,7 +912,7 @@ static int fts_pinctrl_select_normal(struct fts_ts_data *ts)
 	return ret;
 }
 
-static int fts_pinctrl_select_suspend(struct fts_ts_data *ts)
+static __always_inline int fts_pinctrl_select_suspend(struct fts_ts_data *ts)
 {
 	int ret = 0;
 
@@ -926,7 +926,7 @@ static int fts_pinctrl_select_suspend(struct fts_ts_data *ts)
 	return ret;
 }
 
-static int fts_pinctrl_select_release(struct fts_ts_data *ts)
+static __always_inline int fts_pinctrl_select_release(struct fts_ts_data *ts)
 {
 	int ret = 0;
 
@@ -1075,7 +1075,7 @@ static int fts_power_source_exit(struct fts_ts_data *ts_data)
 	return 0;
 }
 
-static int fts_power_source_suspend(struct fts_ts_data *ts_data)
+static __always_inline int fts_power_source_suspend(struct fts_ts_data *ts_data)
 {
 	int ret = 0;
 
@@ -1091,7 +1091,7 @@ static int fts_power_source_suspend(struct fts_ts_data *ts_data)
 	return ret;
 }
 
-static int fts_power_source_resume(struct fts_ts_data *ts_data)
+static __always_inline int fts_power_source_resume(struct fts_ts_data *ts_data)
 {
 	int ret = 0;
 
@@ -1275,7 +1275,7 @@ static void fts_resume_work(struct work_struct *work)
 	fts_ts_resume(ts_data->dev);
 }
 
-static int fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
+static __always_inline int fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
 {
 	int *blank = NULL;
 	struct msm_drm_notifier *evdata = data;
@@ -1698,7 +1698,7 @@ static int fts_ts_remove_entry(struct fts_ts_data *ts_data)
 	return 0;
 }
 
-static int fts_ts_suspend(struct device *dev)
+static __always_inline int fts_ts_suspend(struct device *dev)
 {
 	int ret = 0;
 	struct fts_ts_data *ts_data = fts_data;
@@ -1746,7 +1746,7 @@ static int fts_ts_suspend(struct device *dev)
 	return 0;
 }
 
-static int fts_ts_resume(struct device *dev)
+static __always_inline int fts_ts_resume(struct device *dev)
 {
 	struct fts_ts_data *ts_data = fts_data;
 
@@ -1855,7 +1855,7 @@ static int fts_ts_remove(struct spi_device *spi)
 }
 
 #ifdef CONFIG_PM
-static int fts_pm_suspend(struct device *dev)
+static __always_inline int fts_pm_suspend(struct device *dev)
 {
 	struct fts_ts_data *ts_data = dev_get_drvdata(dev);
 
@@ -1866,7 +1866,7 @@ static int fts_pm_suspend(struct device *dev)
 	return 0;
 }
 
-static int fts_pm_resume(struct device *dev)
+static __always_inline int fts_pm_resume(struct device *dev)
 {
 	struct fts_ts_data *ts_data = dev_get_drvdata(dev);
 
