@@ -44,6 +44,8 @@
 #include "qg-battery-profile.h"
 #include "qg-defs.h"
 
+#undef pr_info
+#undef pr_debug
 #define pr_info(...)  do {} while (0)
 #define pr_debug(...) do {} while (0)
 

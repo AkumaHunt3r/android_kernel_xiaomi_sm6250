@@ -21,6 +21,8 @@
 
 #include <linux/pmic-voter.h>
 
+#undef pr_info
+#undef pr_debug
 #define pr_info(...)  do {} while (0)
 #define pr_debug(...) do {} while (0)
 
